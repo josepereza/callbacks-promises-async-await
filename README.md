@@ -372,7 +372,7 @@ async function wait() {
 };
 ```
 Solo cuando el primer delay() haya sido resuelto, se llamará al segundo delay(). Apilar varios await implica una espera síncrona entre ellos. Sin embargo, podemos hacer una espera en paralelo del siguiente modo:
-
+```
 async function wait() {
   const d1 = delay(500);
   const d2 = delay(500);
@@ -380,14 +380,16 @@ async function wait() {
   await d2;
   return "Ha transcurrido, como mínimo, 500ms.";
 };
+```
 Es una solución mucho más interesante ya que ambas llamadas a delay() serán lanzadas, y una vez iniciadas nos quedamos a la espera de su resolución. De este modo, permitimos que las llamadas asíncronas a delay() sucedan de forma concurrente y progresen a la vez.
 
 ¿Recuerdas cuando dijimos que async / await era puro azúcar sintáctico sobre promesas? Fíjate en esta equivalencia al ejemplo anterior:
-
+```
 async function wait() {
   const d1 = delay(500);
   const d2 = delay(500);
   await Promise.all([d1, d2]);
   return "Ha transcurrido, como mínimo, 500ms.";
 };
+```
 Reemplazamos los dos await apilados por un Promise.all(), al que a su vez esperamos con un único await (recuerda que Promise.all() devuelve una promesa). De este modo eliminamos elegantemente el riesgo que conlleva usar múltiples await e incurrir en una espera secuencial no deseada.

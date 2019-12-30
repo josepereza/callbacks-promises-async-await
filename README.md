@@ -1,6 +1,10 @@
+
+
 # callbacks-promises-async-await
 Ejemplos de callback  , promises y async await  en nodejs - javascript6
 # Javascript Asíncrono: La guía definitiva
+
+origen:  https://lemoncode.net/lemoncode-blog/2018/1/29/javascript-asincrono
 
 La asincronía es uno de los pilares fundamentales de Javascript. El objetivo de esta guía es profundizar en las piezas y elementos que la hacen posible. Teniendo claro estos conceptos, podrás ponerlos en práctica en tu código y escribir mejores aplicaciones.
 
@@ -8,7 +12,7 @@ Las explicaciones que encontrarás a continuación se apoyan gráficos sencillos
 
 
 # Concurrencia y Paralelismo
-origen:  https://lemoncode.net/lemoncode-blog/2018/1/29/javascript-asincrono
+
 Concurrencia y paralelismo son conceptos relacionados pero con un importante matiz de diferencia entre ellos. Es por esto que muy a menudo se confunden y se utilizan erróneamente. Vayamos al grano:
 
 Concurrencia: cuando dos o mas tareas progresan simultáneamente.

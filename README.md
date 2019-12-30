@@ -84,30 +84,33 @@ Lo más probable es que un cuello de botella se produzca como consecuencia de un
 
 2 El loop de eventos que aquí se explica es un modelo teórico. La implementación real en navegadores y motores de Javascript está muy optimizada y podría ser distinta.
 
-Nota breve sobre Paralelismo
+## Nota breve sobre Paralelismo
 Aunque Javascript ha sido concebido con las operaciones de entrada/salida en mente, no significa que no pueda ejecutar tareas de procesado intesivo. Por supuesto que puede hacerlo, pero si no se manejan adecuadamente, podría dar lugar a los problemas mencionados en el apartado anterior.
 
 Se ha invertido un considerable esfuerzo ultimamente para minimizar estos problemas. Como resultado, entidades como los WebWorkers y los SharedArrayBuffer han visto la luz recientemente para introducir el paralelismo en Javascript. Si necesitas ejecutar tareas pesadas que hagan un uso intensivo de CPU deberías considerar el uso de WebWorkers que corran en segundo plano consumiendo threads distintos al principal.
 
-Patrones asíncronos en Javascript
-Callbacks
+# Patrones asíncronos en Javascript
+## Callbacks
 Los callbacks son la pieza clave para que Javascript pueda funcionar de forma asíncrona. De hecho, el resto de patrones asíncronos en Javascript está basado en callbacks de un modo u otro, simplemente añaden azúcar sintáctico para trabajar con ellos más cómodamente.
 
 Un callback no es más que una función que se pasa como argumento de otra función, y que será invocada para completar algún tipo de acción. En nuestro contexto asíncrono, un callback representa el '¿Qué quieres hacer una vez que tu operación asíncrona termine?'. Por tanto, es el trozo de código que será ejecutado una vez que una operación asíncrona notifique que ha terminado. Esta ejecución se hará en algún momento futuro, gracias al mecanismo que implementa el bucle de eventos.
 
 Fíjate en el siguiente ejemplo sencillo utilizando un callback:
-
+```
 setTimeout(function(){
   console.log("Hola Mundo con retraso!");
 }, 1000)
+```
 Si lo prefieres, el callback puede ser asignado a una variable con nombre en lugar de ser anónimo:
-
+```
 const myCallback = () => console.log("Hola Mundo con retraso!");
 setTimeout(myCallback, 1000);
+
+```
 setTimeout es una función asíncrona que programa la ejecución de un callback una vez ha transcurrido, como mínimo, una determinada cantidad de tiempo (1 segundo en el ejemplo anterior). A tal fin, dispara un timer en un contexto externo y registra el callback para ser ejecutado una vez que el timer termine. En resumen, retrasa una ejecución, como mínimo, la cantidad especificada de tiempo.
 
 Es importante comprender que, incluso si configuramos el retraso como 0ms, no significa que el callback vaya a ejecutarse inmediatamente. Atento al siguiente ejemplo:
-
+```
 setTimeout(function(){
   console.log("Esto debería aparecer primero");
 }, 0);
@@ -115,11 +118,12 @@ console.log("Sorpresa!");
 
 // Sorpresa!
 // Esto debería aparecer primero
+```
 Recuerda, un callback que se añade al loop de eventos debe esperar su turno. En nuestro ejemplo, el callback del setTimeout debe esperar el primer tick. Sin embargo, la pila esta ocupada procesando la línea console.log("Sorpresa!"). El callback se despachará una vez la pila quede vacía, en la práctica, cuando Sorpresa! haya sido logueado.
 
 Callback Hell
 Los callbacks también pueden lanzar a su vez llamadas asíncronas, asi que pueden anidarse tanto como se desee. Inconveniente, podemos acabar con código como este:
-
+```
 setTimeout(function(){
   console.log("Etapa 1 completada");
   setTimeout(function(){
@@ -133,29 +137,33 @@ setTimeout(function(){
     }, 3000);
   }, 2000);
 }, 1000);
+```
 Éste es uno de los inconvenientes clásicos de los callbacks, además de la indentación, resta legibilidad, dificulta su mantenimiento y añade complejidad ciclomática. Al Callback Hell también se le conoce como Pyramid of Doom o Hadouken.
 
-Promesas
+# Promesas
 Una promesa es un objeto que representa el resultado de una operación asíncrona. Este resultado podría estar disponible ahora o en el futuro. Las promesas se basan en callbacks pero añaden azúcar para un mejor manejo y sintaxis. Las promesas son especiales en términos de asincronía ya que añaden un nuevo nivel de prioridad que estudiaremos a continuación.
 
-Consumiendo Promesas
+## Consumiendo Promesas
 Cuando llamamos a una función asíncrona implementada con este patrón, nos devolverá inmediatamente una promesa como garantía de que la operación asíncrona finalizará en algún momento, ya sea con éxito o con fallo. Una vez que tengamos el objeto promesa en nuestro poder, registramos un par de callbacks: uno para indicarle a la promesa 'que debe hacer en caso de que todo vaya bien' (resolución de la promesa o resolve) y otro para determinar 'que hacer en caso de fallo' (rechazo de la promesa o reject).
 
 A resumidas cuentas, una promesa es un objeto al que le adjuntamos callbacks, en lugar de pasarlos directamente a la función asíncrona. La forma en que registramos esos dos callbacks es mediante el método .then(resolveCallback, rejectCallback). En terminología de promesas, decimos que una promesa se resuelve con éxito (resolved) o se rechaza con fallo (rejected). Echa un vistazo al siguiente ejemplo:
-
+```
 const currentURL = document.URL.toString();
 const promise = fetch(currentURL);
 promise.then(result => console.log(result),
   e => console.log(`Error capturado:  ${e}`));
+  ```
 Es más legible si lo expresamos de la siguiente manera:
-
+```
 fetch(document.URL.toString())
   .then(result => console.log(result),
     e => console.log(`Error capturado:  ${e}`));
+    
+```
 En el ejemplo anterior, pedimos al servidor que nos provea una URL utilizando la función asíncrona fetch y nos devuelve una promesa. Configuramos la promesa con dos callbacks: uno para resolver la promesa, que mostrará la página por consola en caso de éxito, y otro para rechazarla en caso de fallo que mostrará el error asociado.
 
 Una característica interesante de las promesas es que pueden ser encadenadas. Esto es posible gracias a que la llamada .then() también devuelve una promesa. Esta nueva promesa devuelta será resuelta con el valor que retorne el callback de resolución original (el que hemos pasado al primer then()):
-
+```
 fetch(document.URL.toString())
   .then(result => {
     console.log(result);
@@ -164,13 +172,16 @@ fetch(document.URL.toString())
     e => console.log(`Error capturado:  ${e}`))
   .then(result => console.log(`Segundo Then despues de ${result}: La página ya ha debido ser mostrada`),
     e => console.log(`Error capturado:  ${e}`));
+ ```   
 Para evitar verbosidad, podemos encadenar las promesas de un modo mas corto, empleando el método .catch(rejectCallback) para catpurar cualquier rechazo que ocurra en cualesquiera de las promesas encadenadas. catch(rejectCallback) es equivalente a .then(null, rejectCallback). Solo se necesita una única sentencia catch() al final de una cadena de promesas:
-
+```
 fetch(document.URL.toString())
   .then(result => console.log(result))
   .then(() => console.log(`Fetch completado, página mostrada`))
   .catch(e => console.log(`Error capturado:  ${e}`));
-Composición de Promesas
+ ``` 
+  
+# Composición de Promesas
 Es muy frecuente consumir más de una promesa a la vez y habitualmente es deseable que se ejecuten en paralelo. Es decir, lanzamos varias tareas asíncronas al mismo tiempo y recogemos sus correspondientes promesas a la espera de que una, o todas, se resuelvan. Para estos casos contamos con dos herramientas de composición de gran utilidad: Promise.all() y Promise.race().
 
 Promise.all() acepta un array de promesas y devuelve una nueva promesa cuya resolución se completará con éxito una vez que todas las promesas originales se hayan resuelto satisfactoriamente, o en caso de fallo, será rechazada en cuanto una de las promesas originales sea rechazada. Esta promesa compuesta, además, nos devolverá un array con los resultados de cada una de las promesas originales. Veamos un sencillo ejemplo:
@@ -191,7 +202,7 @@ Creando Promesas
 Una promesa se crea instanciando un nuevo objeto Promise. En el momento de la creación, en el constructor, debemos especificar un callback que contenga la carga de la promesa, aquello que la promesa debe hacer. Este callback nos provee de dos argumentos: resolveCallback y rejectCallback. Te suenan, ¿verdad? Son los dos mismos callbacks registrados al consumir la promesa. De este modo, depende de ti como desarrollador llamar a resolveCallback y rejectCallback cuando sea necesario para señalizar que la promesa ha sido completada con éxito o con fallo.
 
 Una plantilla típica para la creación de promesas es la siguiente:
-
+```
 const myAsyncFunction = () => {
   return new Promise((resolve, reject) => {
 
@@ -204,6 +215,8 @@ const myAsyncFunction = () => {
     }
   });
 }
+
+```
 Un ejemplo sencillo podría ser:
 
 const checkServer = (url) => {
@@ -241,7 +254,7 @@ Promise.resolve().then(() => console.log("2"));
 // 1
 El callback de la promesa (() => console.log("2")) tiene mayor prioridad que el callback del setTimeout gracias a la cola de microtareas, y por ello es procesado primero.
 
-Generadores
+## Generadores
 NOTA: Considera esta sección como un pequeño inciso. Los generadores suponen material suficiente para ser estudiados en una guía aparte. Sin embargo, creemos importante dar una pequeña pincelada sobre generadores antes de introducir el siguiente patrón. El motivo es que el patrón async / await se sustenta en el concepto de generadores para gestionar las promesas de forma transparente al desarrollador. Veamos como es posible.
 
 Los generadores (funciones generadoras) son un tipo especial de funciones con una poderosa cualidad: son funciones de las que se puede salir y volver a entrar, manteniendo su contexto tal cual lo habíamos dejado. Es decir, son funciones cuya ejecución podemos pausar.
@@ -306,7 +319,7 @@ Seguro que estás pensando que los generadores esconden alguna magia que los hac
 
 La clave reside en combinar los generadores con las promesas. El resultado es una herramienta tremendamente útil. Imagina que un generador devuelve una promesa en cada una de sus ejecuciones. Como se pausa con cada retorno, podríamos programarlo para "esperar" a dicha promesa y continuar una vez se haya resuelto. De este modo, podríamos expresar de forma síncrona un flujo de código asíncrono. Aunque vamos a omitir un ejemplo de implementación debido a la complejidad, esta es la base que se esconde en el siguiente patrón.
 
-Async / Await
+## Async / Await
 Las promesas supusieron un gran salto en Javascript al introducir una mejora sustancial sobre los callbacks y un manejo más elegante de nuestras tareas asíncronas. Sin embargo, también pueden llegar a ser tediosas y verbosas a medida que se requieren más y más .then(). Las palabras clave async y await surgieron para simplificar el manejo de las promesas. Son puro azúcar para hacer las promesas más amigables, escribir código más sencillo, reducir el anidamiento y mejorar la trazabilidad al depurar. Pero recuerda, async \ await y las promesas son lo mismo en el fondo.
 
 La etiqueta async declara una función como asíncrona e indica que una promesa será automáticamente devuelta. Podemos declarar como async tanto funciones con nombre, anónimas, o funciones flecha. Por otro lado, await debe ser usado siempre dentro de una función declarada como async y esperará automáticamente (de forma asíncrona y no bloqueante) a que una promesa se resuelva.

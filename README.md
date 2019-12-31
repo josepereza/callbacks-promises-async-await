@@ -121,7 +121,7 @@ console.log("Sorpresa!");
 ```
 Recuerda, un callback que se añade al loop de eventos debe esperar su turno. En nuestro ejemplo, el callback del setTimeout debe esperar el primer tick. Sin embargo, la pila esta ocupada procesando la línea console.log("Sorpresa!"). El callback se despachará una vez la pila quede vacía, en la práctica, cuando Sorpresa! haya sido logueado.
 
-Callback Hell
+### Callback Hell
 Los callbacks también pueden lanzar a su vez llamadas asíncronas, asi que pueden anidarse tanto como se desee. Inconveniente, podemos acabar con código como este:
 ```
 setTimeout(function(){
@@ -185,7 +185,7 @@ fetch(document.URL.toString())
 Es muy frecuente consumir más de una promesa a la vez y habitualmente es deseable que se ejecuten en paralelo. Es decir, lanzamos varias tareas asíncronas al mismo tiempo y recogemos sus correspondientes promesas a la espera de que una, o todas, se resuelvan. Para estos casos contamos con dos herramientas de composición de gran utilidad: Promise.all() y Promise.race().
 
 Promise.all() acepta un array de promesas y devuelve una nueva promesa cuya resolución se completará con éxito una vez que todas las promesas originales se hayan resuelto satisfactoriamente, o en caso de fallo, será rechazada en cuanto una de las promesas originales sea rechazada. Esta promesa compuesta, además, nos devolverá un array con los resultados de cada una de las promesas originales. Veamos un sencillo ejemplo:
-
+```
 const p1 = fetch("URL1_Aqui");
 const p2 = fetch("URL2_Aqui");
 const p3 = fetch("URL3_Aqui");
@@ -193,12 +193,16 @@ const p3 = fetch("URL3_Aqui");
 Promise.all([p1, p2, p3])
   .then(resultArray => console.log(resultArray))
   .catch(e => console.log(`Error capturado:  ${e}`));
+```  
 El mecanismo de Promise.race() es similar con la diferencia de un pequeño matiz. La promesa compuesta que devuelve .race() será resuelta tan pronto como se resuelva alguna de las promesas originales, ya sea con éxito o fallo. De ahí el nombre del método, es una competición, la primera en terminar gana. Puedes comprobar tu mismo con el ejemplo anterior cual de las 3 URLs tarda menos en cargar:
-
+```
 Promise.race([p1, p2, p3])
   .then(winnerResult => console.log(winnerResult))
   .catch(e => console.log(`Error capturado:  ${e}`));
-Creando Promesas
+  
+```  
+## Creando Promesas
+
 Una promesa se crea instanciando un nuevo objeto Promise. En el momento de la creación, en el constructor, debemos especificar un callback que contenga la carga de la promesa, aquello que la promesa debe hacer. Este callback nos provee de dos argumentos: resolveCallback y rejectCallback. Te suenan, ¿verdad? Son los dos mismos callbacks registrados al consumir la promesa. De este modo, depende de ti como desarrollador llamar a resolveCallback y rejectCallback cuando sea necesario para señalizar que la promesa ha sido completada con éxito o con fallo.
 
 Una plantilla típica para la creación de promesas es la siguiente:
@@ -218,7 +222,7 @@ const myAsyncFunction = () => {
 
 ```
 Un ejemplo sencillo podría ser:
-
+```
 const checkServer = (url) => {
   return new Promise((resolve, reject) => { 
     fetch(url)
@@ -230,20 +234,22 @@ const checkServer = (url) => {
 checkServer(document.URL.toString())
   .then(result => console.log(result))
   .catch(e => console.log(e));
+```  
 Las promesas son muy útiles para envolver antiguas APIs asíncronas que funcionan a través de callbacks puros. De esta forma podemos hacerlas funcionar via promesas:
-
+```
 const delay = time => new Promise(resolveCallback => setTimeout(resolveCallback, time));
 
 delay(3000)
   .then(() => console.log(`Este es un retardo de al menos 3 segundos`))
   .catch(() => console.log(`Retardo fallido`));
-Asincronía en Promesas
+```  
+## Asincronía en Promesas
 Si tratásemos las promesas con la misma prioridad que el resto de mensajes asíncronos, retrasariamos innecesariamente la ejecución de sus callbacks. Podrían acabar 'perdiéndose' entre otros mensajes en la cola de eventos, como por ejemplo mensajes de renderizado o eventos de usuario. Dado que las promesas suelen ser fruto de la interacción con importantes APIs asíncronas, y por tanto, son una parte importante de la que se sirve tu aplicación, no queremos que se retrasen. Es preferible darles una prioridad mayor. El estándar ECMAScript describe el uso de una cola especial, llamada cola de microtareas o microtask queue, con una mayor prioridad dedicada a la gestión de callbacks de promesas.
 
 La idea detrás de una segunda cola de alta prioridad es que los callbacks de cada promesa se almacenen aquí, de modo que cuando un nuevo tick del bucle de eventos tenga lugar, esta cola prioritaria será atendida primero. Asi pues, nos aseguramos que los callbacks de las promesas se ejecutarán en un futuro, si, pero lo antes posible.
 
 Por este motivo, las trazas del siguiente ejemplo aparecen en un orden inesperado si sólo considerasemos una única cola:
-
+```
 // LLamada asíncrona con callback puro.
 setTimeout(() => console.log("1"), 0); 
 
@@ -252,6 +258,7 @@ Promise.resolve().then(() => console.log("2"));
 
 // 2
 // 1
+```
 El callback de la promesa (() => console.log("2")) tiene mayor prioridad que el callback del setTimeout gracias a la cola de microtareas, y por ello es procesado primero.
 
 ## Generadores
@@ -268,13 +275,13 @@ function* countThree() {
 }
 Esta función cuenta hasta tres, devolviendo en cada pausa que marca yield el valor que tiene a la derecha. Es decir, en la primera iteración el valor 1, en la segunda el valor 2 y en la tercera el 3. Pero, ¿cómo controlamos el flujo de ejecución de un generador desde el exterior?
 
-Iteradores
+### Iteradores
 Los generadores se apoyan en objetos iteradores. Estos objetos permiten recorrer una secuencia o colección gracias a que mantienen un registro de su posición actual dentro de la secuencia. En la interfaz de un objeto iterable encontramos métodos como .next() que permiten avanzar al elemento siguiente. Los arrays o los mapas, por ejemplo, son iterables por naturaleza.
 
 Asi pues, cuando una función generadora retorna lo hace inmediatamente, sin ejecutarse, devolviendo un objeto iterable. Gracias a este iterable podemos iniciar la primera ejecución, y las sucesivas, llamando a .next() y haciendo que la ejecución avance hasta encontrar el siguiente yield en el generador.
 
 Ahora si, el ejemplo anterior podría ejecutarse del siguiente modo:
-
+```
 function* countThree() { 
   yield 1;
   yield 2;
@@ -286,11 +293,12 @@ generator.next(); // {value: 1, done: false}
 generator.next(); // {value: 2, done: false}
 generator.next(); // {value: 3, done: false}
 generator.next(); // {value: undefined, done: true}
+```
 Fíjate que el valor que devuelve cada llamada a .next() no es únicamente el valor retornado por yield, sino un objeto que se compone de dos propiedades: dicho valor de retorno y un flag booleano que indica si la secuencia se ha agotado.
 
 Entrada y Salida
 Veamos un ejemplo más elaborado con comunicación en ambos sentidos:
-
+```
 function* famousNames() {
   console.log(`Devuelvo "Luke"`);
   let received = yield "Luke";
@@ -312,9 +320,11 @@ generator.next();
 // Recibo "Luke Skywalker" y devuelvo "Homer"
 // Recibo "Homer Simpson" y devuelvo "Bugs"
 // Recibo "Bugs Bunny"
+
+```
 Observa que la palabra clave yield desempeña una doble función. Determina que valor es devuelto, aquello que esté a su derecha, pero además sirve como placeholder para el argumento de entrada (que es pasado mediante el método .next()).
 
-Asincronía con generadores.
+### Asincronía con generadores.
 Seguro que estás pensando que los generadores esconden alguna magia que los hace asíncronos. No te precipites, no es cierto. Los generadores son inherentemente síncronos. Cuando un generador se ejecuta, lo hace en thread princial, consume CPU como el resto de instrucciones de tu aplicación. Por tanto, lo que hemos visto hasta sobre generadores no comporta ningún patrón asíncrono, sino todo lo contrario, una forma de controlar un flujo de ejecución síncrono, esto es, iniciarlo y resumirlo bajo demanda.
 
 La clave reside en combinar los generadores con las promesas. El resultado es una herramienta tremendamente útil. Imagina que un generador devuelve una promesa en cada una de sus ejecuciones. Como se pausa con cada retorno, podríamos programarlo para "esperar" a dicha promesa y continuar una vez se haya resuelto. De este modo, podríamos expresar de forma síncrona un flujo de código asíncrono. Aunque vamos a omitir un ejemplo de implementación debido a la complejidad, esta es la base que se esconde en el siguiente patrón.
@@ -330,14 +340,15 @@ const checkServerWithSugar = async (url) => {
   const response = await fetch(url);
   return `Estado del Servidor: ${response.status === 200 ? "OK" : "NOT OK"}`;
 }
-```
 checkServerWithSugar(document.URL.toString())
   .then(result => console.log(result));
+  
+```  
 Compara este ejemplo con la versión original de checkServer que hemos visto en la sección Promesas. Son equivalentes, en esta nueva versión sin embargo, la sentencia await se encargará automáticamente de gestionar la promesa devuelta por fetch. Esta promesa es transparente a nosotros, pero está siendo configurada de modo que su resolveCallback equivale a las líneas de código que hay posteriores al await (en este caso solo dos, la asignación a response y la última línea con el return. Es decir, todo lo que queda por ejecutar en nuestra función async será usado como el resolveCallbackde la promesa del fetch. Esto es, el resto de nuestra función async se ejecutará asíncronamente una vez que la promesa del fetch se resuelva, sin necesidad de callbacks, con nuestro código escrito de forma secuencial. Casi magia.
 
 En la práctica, este comportamiento es equivalente a decir que el operador await 'pausa la ejecución' o 'espera a una promesa'. Probablemente hayas leído esta definición en algún sitio, pero cuidado con los matices, ya que sugiere la idea errónea de que await bloquea o espera de forma síncrona, y no, no lo hace.
 
-# Manejo de Errores
+### Manejo de Errores
 Si una promesa gestionada por await es rechazada o un error se dispara dentro de la función declarada como async, la promesa que automáticamente devuelve la función async también será rechazada. En este caso, podemos encadenar un .catch() para notificar el error:
 ```
 checkServerWithSugar(document.URL.toString())
@@ -360,7 +371,7 @@ checkServerWithSugar(document.URL.toString())
   .catch(e => console.log(`Error Capturado Fuera de la función async: ${e}`));
   
 ```  
-Multiples awaits
+### Multiples awaits
 Presta mucha atención cuando trabajes con múltiples promesas con el operador await. La mayoría de las veces querrás evitar apilar sentencias await, a menos que una dependa de la otra. Apilar múltiples await es equivalente a lanzar una promesa cuando la anterior haya sido resuelta. Es decir, ejecutar las promesas encadenadamente, de forma secuencial. Y esto no siempre es lo deseable.
 
 Mira el siguiente ejemplo:

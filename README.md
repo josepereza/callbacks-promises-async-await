@@ -60,7 +60,7 @@ Gracias a esta solución, Javascript es áltamente concurrente a pesar de emplea
 
 # El Loop de Eventos de Javascript
 
-![Alt text](browser-structure.png)
+![Alt text](loop-event.png)
 ## Call Stack
 Traducido, pila de llamadas, se encarga de albergar las instrucciones que deben ejecutarse. Nos indica en que punto del programa estamos, por donde vamos. Cada llamada a función de nuestra aplicación, entra a la pila generando un nuevo frame (bloque de memoria reservada para los argumentos y variables locales de dicha función). Por tanto, cuando se llama a una función, su frame es insertado arriba en la pila, cuando una función se ha completado y devuelve, su frame se saca de la pila también por arriba. El funcionamiento es LIFO: last in, first out. De este modo, las llamadas a función que están dentro de otra función contenedora son apiladas encima y serán atendidas primero.
 ## Heap
@@ -247,6 +247,9 @@ delay(3000)
 ```  
 ## Asincronía en Promesas
 Si tratásemos las promesas con la misma prioridad que el resto de mensajes asíncronos, retrasariamos innecesariamente la ejecución de sus callbacks. Podrían acabar 'perdiéndose' entre otros mensajes en la cola de eventos, como por ejemplo mensajes de renderizado o eventos de usuario. Dado que las promesas suelen ser fruto de la interacción con importantes APIs asíncronas, y por tanto, son una parte importante de la que se sirve tu aplicación, no queremos que se retrasen. Es preferible darles una prioridad mayor. El estándar ECMAScript describe el uso de una cola especial, llamada cola de microtareas o microtask queue, con una mayor prioridad dedicada a la gestión de callbacks de promesas.
+
+![Alt text](browser-structure.png)
+
 
 La idea detrás de una segunda cola de alta prioridad es que los callbacks de cada promesa se almacenen aquí, de modo que cuando un nuevo tick del bucle de eventos tenga lugar, esta cola prioritaria será atendida primero. Asi pues, nos aseguramos que los callbacks de las promesas se ejecutarán en un futuro, si, pero lo antes posible.
 
